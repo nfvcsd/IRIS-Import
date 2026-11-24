@@ -64,7 +64,6 @@
   .msg.warn { display: block; background: var(--warn-bg); color: var(--warn-text); }
   .folder { margin-top: 14px; font-size: 14px; color: var(--muted); display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
   .folder b { color: var(--text); }
-  button.link { padding: 0; border: 0; background: none; color: var(--accent); font-size: 14px; font-weight: 600; text-decoration: underline; }
   .privacy { margin-top: 18px; font-size: 13px; color: var(--muted); display: flex; gap: 8px; }
 </style>
 </head>
@@ -77,7 +76,7 @@
     <ol class="steps">
       <li><b>1</b>Copy the records in IRIS</li>
       <li><b>2</b>Paste them in the box below</li>
-      <li><b>3</b>Save to the IRIS folder and import into IC</li>
+      <li><b>3</b>Save to Downloads and import into IC</li>
     </ol>
 
     <label for="data">Paste IRIS records</label>
@@ -93,14 +92,13 @@
       <button id="clear" disabled>Clear</button>
     </div>
 
-    <div class="folder" id="folderRow">
-      <span id="folderLabel">Files save to an <b>IRIS</b> folder on your Desktop. The first time you save, a folder window opens: go to your <b>Desktop</b>, click <b>New Folder</b>, name it <b>IRIS</b>, then select that folder. (Chrome won't let a web page use the Desktop itself, only a folder on it.)</span>
-      <button class="link" id="changeFolder" hidden>Change folder</button>
+    <div class="folder">
+      <span>Files save to your <b>Downloads</b> folder.</span>
     </div>
 
     <div class="msg" id="msg" role="status"></div>
 
-    <p class="privacy">🔒 <span>This page works offline. Pasted records stay on this computer and are never uploaded. These are student health records, so delete the .txt file from the IRIS folder once IC has imported it.</span></p>
+    <p class="privacy">🔒 <span>This page works offline. Pasted records stay on this computer and are never uploaded. These are student health records, so delete the .txt file from Downloads once IC has imported it.</span></p>
   </div>
 </main>
 
@@ -131,100 +129,17 @@
   }
   data.addEventListener('input', () => { msg.className = 'msg'; update(); });
 
-  save.addEventListener('click', async () => {
+  save.addEventListener('click', () => {
     let name = filename.value.trim().replace(/[\\/:*?"<>|]/g, '-') || defaultName();
     if (!/\.txt$/i.test(name)) name += '.txt';
     let text = data.value;
     if (!text.endsWith('\n')) text += '\n';
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-
-    // Chrome and Edge: save straight into the IRIS folder
-    if (window.showDirectoryPicker) {
-      try {
-        const dir = await getFolder();
-        const finalName = await uniqueName(dir, name);
-        const fh = await dir.getFileHandle(finalName, { create: true });
-        const w = await fh.createWritable();
-        await w.write(blob);
-        await w.close();
-        showMsg(`Saved "${finalName}" in the IRIS folder. Import it into Infinite Campus, then delete it.`, 'ok');
-      } catch (e) {
-        if (e.name === 'AbortError') showMsg('No folder was chosen, so nothing was saved. Click Save again, then pick the IRIS folder on your Desktop (use New Folder to make it if needed). Chrome won\'t allow the Desktop itself.', 'warn');
-        else showMsg(`Couldn't save the file (${e.message}). Try again.`, 'warn');
-      }
-      return;
-    }
-
-    // Safari and Firefox: browsers only allow saving to Downloads
-    const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
     const a = Object.assign(document.createElement('a'), { href: url, download: name });
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    showMsg(`Saved "${name}" to your Downloads folder (this browser can't save to the Desktop; open this page in Chrome or Edge for that). Import it into Infinite Campus, then delete it.`, 'warn');
+    showMsg(`Saved "${name}" to your Downloads folder. Import it into Infinite Campus, then delete it.`, 'ok');
   });
-
-  // ---- IRIS folder: chosen once, remembered by the browser ----
-  const FOLDER = 'IRIS';
-  const folderLabel = document.getElementById('folderLabel');
-  const changeFolder = document.getElementById('changeFolder');
-  let folder = null;
-
-  function idb(mode, fn) {
-    return new Promise((resolve, reject) => {
-      const open = indexedDB.open('iris-to-txt', 1);
-      open.onupgradeneeded = () => open.result.createObjectStore('kv');
-      open.onerror = () => reject(open.error);
-      open.onsuccess = () => {
-        const tx = open.result.transaction('kv', mode);
-        const req = fn(tx.objectStore('kv'));
-        tx.oncomplete = () => resolve(req.result);
-        tx.onerror = () => reject(tx.error);
-      };
-    });
-  }
-  const remember = h => idb('readwrite', s => s.put(h, 'folder')).catch(() => {});
-  const recall = () => idb('readonly', s => s.get('folder')).catch(() => null);
-
-  function showFolder() {
-    if (!folder) return;
-    folderLabel.innerHTML = 'Saving to the <b></b> folder.';
-    folderLabel.querySelector('b').textContent = folder.name;
-    changeFolder.hidden = false;
-  }
-
-  async function pickFolder() {
-    const picked = await window.showDirectoryPicker({ id: 'iris', mode: 'readwrite', startIn: 'desktop' });
-    // Picked the Desktop (or anywhere else)? Use or make an IRIS folder inside it.
-    folder = picked.name === FOLDER ? picked : await picked.getDirectoryHandle(FOLDER, { create: true });
-    await remember(folder);
-    showFolder();
-    return folder;
-  }
-
-  async function getFolder() {
-    if (!folder) return pickFolder();
-    if (folder.queryPermission && (await folder.queryPermission({ mode: 'readwrite' })) !== 'granted'
-        && (await folder.requestPermission({ mode: 'readwrite' })) !== 'granted') {
-      return pickFolder();
-    }
-    return folder;
-  }
-
-  async function uniqueName(dir, name) {
-    const base = name.replace(/\.txt$/i, '');
-    let candidate = name, n = 2;
-    while (true) {
-      try { await dir.getFileHandle(candidate); } catch { return candidate; }
-      candidate = `${base}_${n++}.txt`;
-    }
-  }
-
-  if (window.showDirectoryPicker) {
-    recall().then(h => { if (h) { folder = h; showFolder(); } });
-    changeFolder.addEventListener('click', () => pickFolder().catch(() => {}));
-  } else {
-    folderLabel.textContent = 'This browser saves to your Downloads folder. To save straight into the IRIS folder on your Desktop, open this page in Chrome or Edge.';
-  }
 
   clear.addEventListener('click', () => {
     data.value = '';
