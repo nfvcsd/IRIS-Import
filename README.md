@@ -19,7 +19,9 @@ If a file for today already exists, the next one is `IRIS_2026-11-24_2.txt`, and
 3. Click **Save .txt file**.
 4. Import the file into Infinite Campus.
 
-The first time, a folder window opens. Choose your **Desktop**, and the page creates the IRIS folder. After that it saves straight into that folder.
+The first time, a folder window opens. Go to your **Desktop**, click **New Folder**, name it **IRIS**, and select it. After that the page saves straight into that folder.
+
+Chrome won't let a web page use the Desktop itself (you'd see "can't open this folder because it contains system files"), so pick the IRIS folder on it.
 
 - Use **Chrome or Edge**. Safari and Firefox can only save to Downloads.
 - The page runs entirely in the browser. Pasted records are never uploaded.
