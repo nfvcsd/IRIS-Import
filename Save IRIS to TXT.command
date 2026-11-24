@@ -2,15 +2,14 @@
 # Save IRIS to TXT
 # 1. In IRIS, select the records and copy them (Cmd+C).
 # 2. Double-click this file.
-# 3. The copied text is saved exactly as-is in the IRIS folder on your
-#    Desktop as IRIS_YYYY-MM-DD.txt (today's date), and Finder opens to show it.
-#    The IRIS folder is created automatically the first time.
+# 3. The copied text is saved exactly as-is in your Downloads folder as
+#    IRIS_YYYY-MM-DD.txt (today's date), and Finder opens to show it.
 # 4. Import that .txt into Infinite Campus.
 #
 # These are student health records. Delete the .txt after a successful import.
 
 export LANG=en_US.UTF-8   # keep accented names intact
-SAVE_DIR="${IRIS_SAVE_DIR:-$HOME/Desktop/IRIS}"
+SAVE_DIR="${IRIS_SAVE_DIR:-$HOME/Downloads}"
 
 finish() { echo; read -n 1 -s -r -p "Press any key to close this window."; echo; exit "$1"; }
 

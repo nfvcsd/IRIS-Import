@@ -21,7 +21,7 @@ Works in any browser. If a file with the same name is already in Downloads, the 
 
 1. Copy the records in IRIS.
 2. Double-click `Save IRIS to TXT.command`.
-3. Finder opens to the new file in Desktop › IRIS. (The script saves there, not to Downloads. If a file for today already exists, it adds `_2`, `_3`, and so on.)
+3. Finder opens to the new file in your **Downloads** folder. If a file for today already exists, it adds `_2`, `_3`, and so on.
 
 Get the script by cloning this repo (for example with GitHub Desktop). A copy downloaded through a browser loses its permission to run.
 
