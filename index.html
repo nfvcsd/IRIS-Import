@@ -94,7 +94,7 @@
     </div>
 
     <div class="folder" id="folderRow">
-      <span id="folderLabel">Files save to an <b>IRIS</b> folder on your Desktop. The first time you save, choose your <b>Desktop</b> and the page makes the folder.</span>
+      <span id="folderLabel">Files save to an <b>IRIS</b> folder on your Desktop. The first time you save, a folder window opens: go to your <b>Desktop</b>, click <b>New Folder</b>, name it <b>IRIS</b>, then select that folder. (Chrome won't let a web page use the Desktop itself, only a folder on it.)</span>
       <button class="link" id="changeFolder" hidden>Change folder</button>
     </div>
 
@@ -149,7 +149,7 @@
         await w.close();
         showMsg(`Saved "${finalName}" in the IRIS folder. Import it into Infinite Campus, then delete it.`, 'ok');
       } catch (e) {
-        if (e.name === 'AbortError') showMsg('Save cancelled. Nothing was saved.', 'warn');
+        if (e.name === 'AbortError') showMsg('No folder was chosen, so nothing was saved. Click Save again, then pick the IRIS folder on your Desktop (use New Folder to make it if needed). Chrome won\'t allow the Desktop itself.', 'warn');
         else showMsg(`Couldn't save the file (${e.message}). Try again.`, 'warn');
       }
       return;
